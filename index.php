@@ -14,6 +14,11 @@ $query .= " GROUP BY h.id_hotel ORDER BY RAND()";
 
 $hasil = $koneksi->query($query);
 $jumlah_hotel = $hasil->num_rows; // Simpan jumlah hotel sebelum di-loop
+
+/* ambil data hotel dengan diskon 50% ke atas */
+$query_diskon = "SELECT h.*, k.harga_per_malam, k.diskon_persen FROM hotel h LEFT JOIN kamar k ON h.id_hotel = k.id_hotel WHERE k.diskon_persen >= 50 GROUP BY h.id_hotel ORDER BY k.diskon_persen DESC LIMIT 4";
+$hasil_diskon = $koneksi->query($query_diskon);
+$jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -515,6 +520,30 @@ $jumlah_hotel = $hasil->num_rows; // Simpan jumlah hotel sebelum di-loop
         grid-column: span 4;
     }
 
+    /* Section Diskon 50% ke atas */
+    .section-diskon-besar {
+        margin-bottom: 60px;
+        margin-top: 80px;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        padding: 40px;
+        border-radius: 12px;
+    }
+
+    .section-title-diskon {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 30px;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+    }
+
+    .grid-diskon {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        width: 100%;
+    }
+
     /* logika Breakpoint grid mobile (2 Card) */
     @media (max-width: 768px) {
 
@@ -524,11 +553,20 @@ $jumlah_hotel = $hasil->num_rows; // Simpan jumlah hotel sebelum di-loop
             gap: 12px;
         }
 
+        .grid-diskon {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
         .container {
             margin: 30px auto;
         }
 
         .section-title {
+            font-size: 1.1rem;
+        }
+
+        .section-title-diskon {
             font-size: 1.1rem;
         }
 
@@ -632,6 +670,67 @@ $jumlah_hotel = $hasil->num_rows; // Simpan jumlah hotel sebelum di-loop
                 <?php endif; ?>
             </div>
         </section>
+
+        <!-- Section Diskon Besar 50% ke atas -->
+        <?php if ($jumlah_diskon > 0 && $keyword === ''): ?>
+        <section class="section-diskon-besar">
+            <h3 class="section-title-diskon">Diskon nginep s.d. 50%</h3>
+
+            <div class="grid-diskon">
+                <?php 
+                    $hasil_diskon->data_seek(0); // Reset pointer ke awal
+                    while($row_diskon = $hasil_diskon->fetch_assoc()): 
+                ?>
+                <a href="/reservasi_hotel/layanan_pemesanan/pesan.php?id_hotel=<?= $row_diskon['id_hotel']; ?>"
+                    class="card-link">
+                    <article class="card-hotel">
+                        <?php 
+                            $nama_foto = $row_diskon['foto'];
+                            if(empty($nama_foto) || $nama_foto == 'default.jpg' || !file_exists("assets/" . $nama_foto)) {
+                                $path_foto = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80";
+                            } else {
+                                $path_foto = "/reservasi_hotel/assets/" . $nama_foto;
+                            }
+                        ?>
+                        <div class="img-wrapper">
+                            <img src="<?= $path_foto; ?>" alt="" class="card-img">
+                        </div>
+
+                        <div class="card-body">
+                            <h3 class="card-title"><?= htmlspecialchars($row_diskon['nama_hotel']); ?></h3>
+                            <div class="card-meta">
+                                <span><?= htmlspecialchars($row_diskon['lokasi']); ?></span>
+                            </div>
+                            <p class="card-text"><?= htmlspecialchars($row_diskon['deskripsi']); ?></p>
+
+                            <div class="price-wrapper">
+                                <span class="price-amount">
+                                    <?php 
+                                        $harga_original = $row_diskon['harga_per_malam'];
+                                        $diskon = intval($row_diskon['diskon_persen'] ?? 0);
+                                        $harga_final = $diskon > 0 ? $harga_original * (100 - $diskon) / 100 : $harga_original;
+                                    ?>
+                                    <?php if ($diskon > 0): ?>
+                                    <div class="price-row">
+                                        <span class="price-original">IDR
+                                            <?= number_format($harga_original, 0, ',', '.'); ?></span>
+                                        <span class="discount-badge">-<?= $diskon; ?>%</span>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="price-row">
+                                        <span>IDR
+                                            <?= $harga_final ? number_format($harga_final, 0, ',', '.') : '-'; ?><span
+                                                class="price-suffix">/malam</span></span>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                    </article>
+                </a>
+                <?php endwhile; ?>
+            </div>
+        </section>
+        <?php endif; ?>
     </main>
 
     <!-- Pop-up Login & Daftar -->
