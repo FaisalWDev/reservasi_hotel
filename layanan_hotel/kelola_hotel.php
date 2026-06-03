@@ -364,7 +364,7 @@ $pesanan_counts = json_encode(array_map(function($item) { return $item['jumlah_p
 
     <main class="panel-container">
         <header class="panel-header">
-            <h1 class="panel-title">Dashboard Manajemen Hotel</h1>
+            <h1 class="panel-title">Dashboard Manajemenn Hotel</h1>
             <form id="adminSearchForm" class="header-search" action="" method="GET">
                 <input type="text" name="cari_admin" id="adminSearchInput"
                     value="<?= htmlspecialchars($pencarian_admin); ?>" placeholder="Cari hotel...">

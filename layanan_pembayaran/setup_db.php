@@ -1,5 +1,5 @@
 <?php
-// Database migration - jalankan untuk setup kolom yang diperlukan
+// Database migrasi
 $koneksi = new mysqli("localhost", "root", "", "reservasi_hotel");
 
 if ($koneksi->connect_error) {
