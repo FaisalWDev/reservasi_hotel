@@ -5,20 +5,34 @@ $koneksi = new mysqli("localhost", "root", "", "reservasi_hotel");
 /* search bar/pencrarian */
 $keyword = isset($_GET['cari']) ? $koneksi->real_escape_string($_GET['cari']) : '';
 
-/* ambil data hotel */
-$query = "SELECT h.*, k.harga_per_malam, k.diskon_persen FROM hotel h LEFT JOIN kamar k ON h.id_hotel = k.id_hotel";
-if ($keyword !== '') {
-    $query .= " WHERE h.nama_hotel LIKE '%$keyword%' OR h.lokasi LIKE '%$keyword%'";
-}
-$query .= " GROUP BY h.id_hotel ORDER BY RAND()";
-
-$hasil = $koneksi->query($query);
+    /* ambil data hotel */
+    $query = "SELECT h.*, k.harga_per_malam, k.diskon_persen FROM hotel h LEFT JOIN kamar k ON h.id_hotel = k.id_hotel";
+    if ($keyword !== '') {
+        $query .= " WHERE h.nama_hotel LIKE '%$keyword%' OR h.lokasi LIKE '%$keyword%'";
+    }
+    $query .= " GROUP BY h.id_hotel ORDER BY RAND()";$hasil = $koneksi->query($query);
 $jumlah_hotel = $hasil->num_rows; // Simpan jumlah hotel sebelum di-loop
 
 /* ambil data hotel dengan diskon 50% ke atas */
 $query_diskon = "SELECT h.*, k.harga_per_malam, k.diskon_persen FROM hotel h LEFT JOIN kamar k ON h.id_hotel = k.id_hotel WHERE k.diskon_persen >= 50 GROUP BY h.id_hotel ORDER BY k.diskon_persen DESC LIMIT 4";
 $hasil_diskon = $koneksi->query($query_diskon);
 $jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
+
+/* ambil hotel dengan pesanan terbanyak hari ini */
+$query_favorit = "SELECT h.id_hotel, COUNT(DISTINCT b.id_pemesanan) as jumlah_pesanan
+                  FROM hotel h
+                  LEFT JOIN kamar k ON h.id_hotel = k.id_hotel
+                  LEFT JOIN pemesanan b ON k.id_kamar = b.id_kamar
+                  WHERE DATE(b.dibuat_pada) = CURDATE()
+                  GROUP BY h.id_hotel
+                  ORDER BY jumlah_pesanan DESC
+                  LIMIT 1";
+$hasil_favorit = $koneksi->query($query_favorit);
+$hotel_favorit_id = null;
+if ($hasil_favorit && $hasil_favorit->num_rows > 0) {
+    $favorit_row = $hasil_favorit->fetch_assoc();
+    $hotel_favorit_id = $favorit_row['id_hotel'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -391,6 +405,27 @@ $jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
         flex-shrink: 0;
     }
 
+    .card-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 12px;
+        margin-top: -4px;
+    }
+
+    .rating-stars {
+        display: flex;
+        gap: 2px;
+        align-items: center;
+    }
+
+    .star-icon {
+        width: 16px;
+        height: 16px;
+        fill: #f97316;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+    }
+
     .icon-location {
         width: 14px;
         height: 14px;
@@ -479,6 +514,28 @@ $jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
         font-weight: 700;
         padding: 2px 5px;
         border-radius: 3px;
+    }
+
+    /* Badge Favorit */
+    .favorite-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        color: white;
+        padding: 4px 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        border-radius: 0 0 8px 0;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        white-space: nowrap;
+    }
+
+    /* logika wrapper card dengan positioning */
+    .card-hotel {
+        position: relative;
     }
 
     /* logika hover gambar */
@@ -627,16 +684,35 @@ $jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
                                         $path_foto = "/reservasi_hotel/assets/" . $nama_foto;
                                     }
                                 ?>
+                        <?php if ($hotel_favorit_id == $row['id_hotel']): ?>
+                        <div class="favorite-badge">Favorit</div>
+                        <?php endif; ?>
                         <div class="img-wrapper">
                             <img src="<?= $path_foto; ?>" alt="" class="card-img">
                         </div>
 
                         <div class="card-body">
                             <h3 class="card-title"><?= htmlspecialchars($row['nama_hotel']); ?></h3>
+
+                            <?php 
+                                $rating = intval($row['rating'] ?? 0);
+                            ?>
+                            <?php if ($rating > 0): ?>
+                            <div class="card-rating">
+                                <div class="rating-stars">
+                                    <?php for ($i = 1; $i <= $rating; $i++): ?>
+                                    <svg class="star-icon" viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="card-meta">
                                 <span><?= htmlspecialchars($row['lokasi']); ?></span>
                             </div>
-                            <p class="card-text"><?= htmlspecialchars($row['deskripsi']); ?></p>
 
                             <div class="price-wrapper">
                                 <span class="price-amount">
@@ -692,16 +768,35 @@ $jumlah_diskon = $hasil_diskon ? $hasil_diskon->num_rows : 0;
                                 $path_foto = "/reservasi_hotel/assets/" . $nama_foto;
                             }
                         ?>
+                        <?php if ($hotel_favorit_id == $row_diskon['id_hotel']): ?>
+                        <div class="favorite-badge">Favorit</div>
+                        <?php endif; ?>
                         <div class="img-wrapper">
                             <img src="<?= $path_foto; ?>" alt="" class="card-img">
                         </div>
 
                         <div class="card-body">
                             <h3 class="card-title"><?= htmlspecialchars($row_diskon['nama_hotel']); ?></h3>
+
+                            <?php 
+                                $rating_diskon = intval($row_diskon['rating'] ?? 0);
+                            ?>
+                            <?php if ($rating_diskon > 0): ?>
+                            <div class="card-rating">
+                                <div class="rating-stars">
+                                    <?php for ($i = 1; $i <= $rating_diskon; $i++): ?>
+                                    <svg class="star-icon" viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="card-meta">
                                 <span><?= htmlspecialchars($row_diskon['lokasi']); ?></span>
                             </div>
-                            <p class="card-text"><?= htmlspecialchars($row_diskon['deskripsi']); ?></p>
 
                             <div class="price-wrapper">
                                 <span class="price-amount">

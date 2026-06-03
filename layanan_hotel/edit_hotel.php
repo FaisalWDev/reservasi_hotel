@@ -34,6 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = $_POST['nama_hotel'];
     $deskripsi = $_POST['deskripsi'];
     $lokasi = $_POST['lokasi'];
+    $rating = intval($_POST['rating']);
     $nama_file_final = $data_hotel['foto'];
 
     if (isset($_FILES['foto_hotel']) && $_FILES['foto_hotel']['error'] === 0) {
@@ -51,8 +52,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data hotel
-    $stmt_up = $koneksi->prepare("UPDATE hotel SET nama_hotel = ?, deskripsi = ?, lokasi = ?, foto = ? WHERE id_hotel = ?");
-    $stmt_up->bind_param("ssssi", $nama, $deskripsi, $lokasi, $nama_file_final, $id_edit);
+    $stmt_up = $koneksi->prepare("UPDATE hotel SET nama_hotel = ?, deskripsi = ?, lokasi = ?, foto = ?, rating = ? WHERE id_hotel = ?");
+    $stmt_up->bind_param("ssssii", $nama, $deskripsi, $lokasi, $nama_file_final, $rating, $id_edit);
     
     if ($stmt_up->execute()) {
         // Update semua kamar
@@ -181,6 +182,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-ctrl">
                 <label>Ganti Foto (Biarkan kosong jika tidak ingin diubah)</label>
                 <input type="file" name="foto_hotel" accept="image/*">
+            </div>
+            <div class="form-ctrl">
+                <label>Rating Bintang ⭐</label>
+                <select name="rating" required>
+                    <option value="1" <?= ($data_hotel['rating'] == 1) ? 'selected' : ''; ?>>1 Bintang</option>
+                    <option value="2" <?= ($data_hotel['rating'] == 2) ? 'selected' : ''; ?>>2 Bintang</option>
+                    <option value="3" <?= ($data_hotel['rating'] == 3) ? 'selected' : ''; ?>>3 Bintang</option>
+                    <option value="4" <?= ($data_hotel['rating'] == 4) ? 'selected' : ''; ?>>4 Bintang</option>
+                    <option value="5" <?= ($data_hotel['rating'] == 5) ? 'selected' : ''; ?>>5 Bintang</option>
+                </select>
             </div>
 
             <hr style="margin: 20px 0; border: none; border-top: 1px dashed #cbd5e1;">

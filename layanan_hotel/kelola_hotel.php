@@ -33,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['tambah_hotel'])) {
     $nama = $_POST['nama_hotel'];
     $deskripsi = $_POST['deskripsi'];
     $lokasi = $_POST['lokasi'];
+    $rating = intval($_POST['rating']);
     $nama_file_final = "default.jpg";
 
     if (isset($_FILES['foto_hotel']) && $_FILES['foto_hotel']['error'] === 0) {
@@ -47,8 +48,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['tambah_hotel'])) {
     }
 
     /* Simpan data hotel */
-    $stmt = $koneksi->prepare("INSERT INTO hotel (nama_hotel, deskripsi, lokasi, foto) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $nama, $deskripsi, $lokasi, $nama_file_final);
+    $stmt = $koneksi->prepare("INSERT INTO hotel (nama_hotel, deskripsi, lokasi, foto, rating) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssi", $nama, $deskripsi, $lokasi, $nama_file_final, $rating);
     
     if($stmt->execute()) {
         $id_hotel_baru = $koneksi->insert_id;
@@ -405,6 +406,17 @@ $pesanan_counts = json_encode(array_map(function($item) { return $item['jumlah_p
                     <div class="form-group">
                         <label>Foto Hotel</label>
                         <input type="file" name="foto_hotel" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Rating Bintang ⭐</label>
+                        <select name="rating" required>
+                            <option value="" disabled selected>-- Pilih Bintang Hotel --</option>
+                            <option value="1">1 Bintang</option>
+                            <option value="2">2 Bintang</option>
+                            <option value="3">3 Bintang</option>
+                            <option value="4">4 Bintang</option>
+                            <option value="5">5 Bintang</option>
+                        </select>
                     </div>
 
                     <div class="sub-section-title">Tipe Kamar 1</div>

@@ -12,6 +12,7 @@ $migrations = [
     "ALTER TABLE pembayaran ADD COLUMN IF NOT EXISTS waktu_pembayaran DATETIME DEFAULT NULL",
     "ALTER TABLE pembayaran ADD COLUMN IF NOT EXISTS kode_transaksi VARCHAR(100) DEFAULT NULL",
     "ALTER TABLE pembayaran ADD COLUMN IF NOT EXISTS deskripsi_pembayaran TEXT DEFAULT NULL",
+    "ALTER TABLE hotel ADD COLUMN IF NOT EXISTS rating INT DEFAULT 0",
 ];
 
 $success_count = 0;
