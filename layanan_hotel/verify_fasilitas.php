@@ -1,9 +1,4 @@
 <?php
-/**
- * QUICK VERIFICATION - Fitur Fasilitas Kamar
- * 
- * File ini untuk verifikasi bahwa semua perubahan sudah terimplementasi dengan benar
- */
 
 $koneksi = new mysqli("localhost", "root", "", "reservasi_hotel");
 
