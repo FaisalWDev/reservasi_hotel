@@ -24,6 +24,28 @@ while($k = $hasil_kamar->fetch_assoc()) {
     $kamar_list[] = $k;
 }
 
+// Ambil data fasilitas
+$query_fasilitas = "SELECT * FROM fasilitas ORDER BY id_fasilitas ASC";
+$hasil_fasilitas = $koneksi->query($query_fasilitas);
+$fasilitas_list = [];
+while ($fac = $hasil_fasilitas->fetch_assoc()) {
+    $fasilitas_list[] = $fac;
+}
+
+// Ambil fasilitas untuk setiap kamar
+$fasilitas_per_kamar = [];
+foreach($kamar_list as $kamar) {
+    $stmt_fac = $koneksi->prepare("SELECT id_fasilitas FROM kamar_fasilitas WHERE id_kamar = ?");
+    $stmt_fac->bind_param("i", $kamar['id_kamar']);
+    $stmt_fac->execute();
+    $result_fac = $stmt_fac->get_result();
+    $ids = [];
+    while($row = $result_fac->fetch_assoc()) {
+        $ids[] = $row['id_fasilitas'];
+    }
+    $fasilitas_per_kamar[$kamar['id_kamar']] = $ids;
+}
+
 if (!$data_hotel) {
     echo "<script>alert('Data tidak ditemukan.'); window.location='kelola_hotel.php';</script>";
     exit();
@@ -64,6 +86,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_km = $koneksi->prepare("UPDATE kamar SET harga_per_malam = ?, diskon_persen = ? WHERE id_kamar = ?");
             $stmt_km->bind_param("dii", $harga_baru, $diskon_baru, $kamar['id_kamar']);
             $stmt_km->execute();
+
+            // Update fasilitas kamar
+            // Hapus fasilitas lama
+            $stmt_del_fac = $koneksi->prepare("DELETE FROM kamar_fasilitas WHERE id_kamar = ?");
+            $stmt_del_fac->bind_param("i", $kamar['id_kamar']);
+            $stmt_del_fac->execute();
+
+            // Tambah fasilitas baru
+            if (isset($_POST["fasilitas_kamar_{$kamar['id_kamar']}"])) {
+                $fasilitas_baru = $_POST["fasilitas_kamar_{$kamar['id_kamar']}"];
+                foreach (array_slice($fasilitas_baru, 0, 7) as $id_fasilitas) {
+                    $id_fac = intval($id_fasilitas);
+                    $stmt_insert_fac = $koneksi->prepare("INSERT INTO kamar_fasilitas (id_kamar, id_fasilitas) VALUES (?, ?)");
+                    $stmt_insert_fac->bind_param("ii", $kamar['id_kamar'], $id_fac);
+                    $stmt_insert_fac->execute();
+                }
+            }
         }
         
         echo "<script>alert('Hotel berhasil diperbarui.'); window.location='kelola_hotel.php';</script>";
@@ -213,6 +252,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label>Diskon (%)</label>
                     <input type="number" name="diskon_kamar_<?= $idx; ?>" placeholder="0" min="0" max="100"
                         value="<?= intval($kamar['diskon_persen'] ?? 0); ?>">
+                </div>
+
+                <div class="form-ctrl">
+                    <label>Fasilitas </label>
+                    <div
+                        style="display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <?php foreach ($fasilitas_list as $fac): 
+                            $checked = in_array($fac['id_fasilitas'], $fasilitas_per_kamar[$kamar['id_kamar']] ?? []) ? 'checked' : '';
+                        ?>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; font-weight: 400;">
+                            <input type="checkbox" name="fasilitas_kamar_<?= $kamar['id_kamar']; ?>[]"
+                                value="<?= $fac['id_fasilitas']; ?>" <?= $checked; ?> style="cursor: pointer;">
+                            <span><?= htmlspecialchars($fac['nama_fasilitas']); ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px; display: block;">Pilih maksimal 7
+                        fasilitas</small>
                 </div>
             </div>
             <?php endforeach; ?>

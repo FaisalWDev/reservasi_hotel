@@ -1,12 +1,12 @@
 <?php
-// Jalankan migration untuk menambah kolom rating
+// migration menambah kolom rating
 $koneksi = new mysqli("localhost", "root", "", "reservasi_hotel");
 
 if ($koneksi->connect_error) {
     die("Koneksi gagal: " . $koneksi->connect_error);
 }
 
-// Cek apakah kolom rating sudah ada
+// Cek kolom rating ada
 $check_column = $koneksi->query("SHOW COLUMNS FROM hotel LIKE 'rating'");
 
 if ($check_column->num_rows === 0) {

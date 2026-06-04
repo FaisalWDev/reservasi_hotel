@@ -988,7 +988,7 @@ if ($hasil_favorit && $hasil_favorit->num_rows > 0) {
         refreshCount++;
         sessionStorage.setItem('refreshCount', refreshCount);
 
-        // Tampilkan popup saat refresh  kelipatan 2
+        // Tampilkan popup saat refresh  2x
         if (refreshCount % 2 === 0 && loginModal) {
             // Disable scroll saat popup muncul
             document.body.style.overflow = 'hidden';
