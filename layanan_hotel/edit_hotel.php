@@ -219,7 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </select>
             </div>
             <div class="form-ctrl">
-                <label>Ganti Foto (Biarkan kosong jika tidak ingin diubah)</label>
+                <label>Ganti Foto</label>
                 <input type="file" name="foto_hotel" accept="image/*">
             </div>
             <div class="form-ctrl">

@@ -286,7 +286,10 @@ if (isset($_POST['proses_pesan'])) {
 
     .card-body {
         padding: 20px;
-        min-height: 220px;
+        min-height: 230px;
+        /* Diubah agar memberikan ruang ideal yang seragam */
+        max-height: 230px;
+        /* Di-lock agar card tidak membesar secara vertikal */
         flex-grow: 1;
         display: flex;
         flex-direction: column;
@@ -320,17 +323,24 @@ if (isset($_POST['proses_pesan'])) {
         overflow: hidden;
         text-overflow: ellipsis;
         min-height: 3.0rem;
+        max-height: 3.0rem;
+        /* Di-lock agar judul panjang tidak mendorong layout */
     }
 
     .card-text {
         color: #475569;
         font-size: 0.88rem;
-        line-height: 1.6;
+        line-height: 1.5;
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        /* Membatasi teks deskripsi maksimal 3 baris */
         -webkit-box-orient: vertical;
         overflow: hidden;
-        margin-bottom: 24px;
+        text-overflow: ellipsis;
+        margin-bottom: 15px;
+        min-height: 4.0rem;
+        /* Memberikan tinggi tetap meski deskripsi pendek/kosong */
+        max-height: 4.0rem;
     }
 
     .price-wrapper {
@@ -505,7 +515,7 @@ if (isset($_POST['proses_pesan'])) {
                 <div class="booking-box">
                     <label class="form-label">Pilih Tipe Kamar & Tarif</label>
                     <select name="id_kamar" class="form-select" id="pilihKamar" required>
-                        <option value="">-- Pilih Kamar --</option>
+                        <option value=""> Pilih Kamar</option>
                         <?php
                         // Reset result pointer
                         $hasil_kamar->data_seek(0);
@@ -528,7 +538,6 @@ if (isset($_POST['proses_pesan'])) {
                     </select>
                 </div>
 
-                <!-- Fasilitas Section -->
                 <div class="fasilitas-section" id="fasilitasContainer" style="display: none;">
                     <div class="fasilitas-title">Fasilitas Kamar</div>
                     <div class="fasilitas-list" id="daftarFasilitas"></div>
@@ -543,7 +552,6 @@ if (isset($_POST['proses_pesan'])) {
         </section>
     </main>
 
-    <!-- Section Rekomendasi Hotel Lain di Wilayah Sama -->
     <section class="rekomendasi-section">
         <h2 class="rekomendasi-title">Hotel Lain di <?= htmlspecialchars($data_hotel['lokasi']); ?></h2>
 
